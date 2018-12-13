@@ -17,7 +17,8 @@ class JudgeState
 public:
     JudgeState();
     void setFPS(int fps);
-    int getJudgeResult(int up_x, int up_y, int down_x, int down_y, int img_h = 680);
+    int getJudgeResult(int up_x, int up_y, int down_x, int down_y, int img_h = 680, bool show_result = false);
+    void cleanJudgeList();
 
 private:
     int state_;

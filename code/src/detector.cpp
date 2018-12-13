@@ -114,7 +114,7 @@ void Detector::showResult(Mat img, int waitkey, bool show_all)
         up_p.y = static_cast<int>(d[4] * img.rows);
         down_p.x = static_cast<int>(d[5] * img.cols);
         down_p.y = static_cast<int>(d[6] * img.rows);
-        int result = judge[0].getJudgeResult(up_p.x, up_p.y, down_p.x, down_p.y, img.rows);
+        int result = judge_[0].getJudgeResult(up_p.x, up_p.y, down_p.x, down_p.y, img.rows);
         std::string text = label_[id]+score;
         putText(img, text, up_p, cv::FONT_HERSHEY_COMPLEX, 0.6, cv::Scalar(0, 255, 255));
         if (result == FALLDOWN)
@@ -142,8 +142,10 @@ void Detector::showResult(Mat img, int waitkey, bool show_all)
             
             locking_id_.addObject(up_p.x, up_p.y, down_p.x, down_p.y, i);
         }
-        
+
         locking_id_.matchID();
+// get result by detections_.size()
+/*
         for (int i = 0; i < detections_.size(); i++)
         {
             const vector<float>& d = detections_[i]; // Detection format: [image_id, label, score, xmin, ymin, xmax, ymax].
@@ -166,7 +168,7 @@ void Detector::showResult(Mat img, int waitkey, bool show_all)
             up_p.y = static_cast<int>(d[4] * img.rows);
             down_p.x = static_cast<int>(d[5] * img.cols);
             down_p.y = static_cast<int>(d[6] * img.rows);
-            int result = judge[id].getJudgeResult(up_p.x, up_p.y, down_p.x, down_p.y, img.rows);
+            int result = judge_[id].getJudgeResult(up_p.x, up_p.y, down_p.x, down_p.y, img.rows);
             sprintf(score, "%0.2f ID:%d", d[2], id);
             std::string text = label_[label_id]+score;
             putText(img, text, up_p, cv::FONT_HERSHEY_COMPLEX, 0.6, cv::Scalar(0, 255, 255));
@@ -175,6 +177,32 @@ void Detector::showResult(Mat img, int waitkey, bool show_all)
             else
                 rectangle(img,up_p ,down_p,Scalar(255,0,0));
         }
+*/
+
+// get result by CACHE_SIZE
+        for (int i = 0; i < CACHE_SIZE; i++)
+        {
+            int up_x, up_y, down_x, down_y;
+            int id_result = locking_id_.getResult(i, up_x, up_y, down_x, down_y);
+
+            if (id_result != MATCH_ID)
+            {
+                // printf("id_result: %d\n", id_result);
+                if (id_result == CLEANER_ID)
+                    judge_[i].cleanJudgeList();
+                continue;
+            }
+            // printf("have id: %d\n", i);
+            int judge_result = judge_[i].getJudgeResult(up_x, up_y, down_x, down_y, img.rows);
+            char text[10];
+            sprintf(text, "ID:%d", i);
+            putText(img, text, CvPoint(up_x, up_y), cv::FONT_HERSHEY_COMPLEX, 0.6, cv::Scalar(0, 255, 255));
+            if (judge_result == FALLDOWN)
+                rectangle(img, CvPoint(up_x, up_y), CvPoint(down_x, down_y), Scalar(0,255,255));
+            else
+                rectangle(img, CvPoint(up_x, up_y), CvPoint(down_x, down_y), Scalar(255,0,0));   
+        }
+
     }
 
     imshow("result", img);
@@ -184,6 +212,6 @@ void Detector::showResult(Mat img, int waitkey, bool show_all)
 void Detector::setFPS(int fps)
 {
     for (int i = 0; i < MAX_DETECTIONS; i++)
-        judge[i].setFPS(fps);
+        judge_[i].setFPS(fps);
 }
 }

@@ -165,7 +165,7 @@ void LockingID::matchID()
 {  
     for (int i = 0; i < CACHE_SIZE; i++)
     {
-        cache_list_[i].origin_id = -1;
+        cache_list_[i].origin_id = INIT_ID;
     }
 
     std::list<LockingTarget>::iterator iter = add_target_list_.begin();
@@ -192,10 +192,11 @@ void LockingID::matchID()
 
             // printf("error: %f\n", area_error);
             // printf("error2: %f\n", area_error2);
+
             if ((area_error > MUST_AREA_ERROR && area_error2 > MIN_AREA_ERROR)||
-                (area_error2 > MUST_AREA_ERROR && area_error > MIN_AREA_ERROR))
+                (area_error2 > MUST_AREA_ERROR && area_error > FILTER_AREA_ERROR))
             {
-                if (cache_list_[i].origin_id != -1)
+                if (cache_list_[i].origin_id != INIT_ID)
                 {
                     int origin_area = (cache_list_[i].rectangle.down_y - cache_list_[i].rectangle.up_y)
                                       *(cache_list_[i].rectangle.down_x - cache_list_[i].rectangle.up_x);
@@ -208,8 +209,7 @@ void LockingID::matchID()
                         cache_list_[i].rectangle.up_x   = iter->rectangle.up_x;
                         cache_list_[i].rectangle.up_y   = iter->rectangle.up_y;
                         cache_list_[i].rectangle.down_x = iter->rectangle.down_x;
-                        cache_list_[i].rectangle.down_y = iter->rectangle.down_y;
-                        cache_list_[i].lose_times++;   
+                        cache_list_[i].rectangle.down_y = iter->rectangle.down_y; 
                     }
                 }
                 else
@@ -225,11 +225,6 @@ void LockingID::matchID()
                 a_switch = 0;
                 break;
             }
-            
-            cache_list_[i].lose_times++;
-
-            if (cache_list_[i].lose_times > MAX_LOSE_TIMES)
-                cleanCache(i);
         }
 
         iter++;
@@ -240,28 +235,29 @@ void LockingID::matchID()
         }
     }
 
-    if (add_target_list_.size() <= 0)
-        return;
-
-    for (int i = 0; i < CACHE_SIZE; i++)
+    if (add_target_list_.size() > 0)
     {
-        if (!cache_list_[i].no_empty)
+        for (int i = 0; i < CACHE_SIZE; i++)
         {
-            std::list<LockingTarget>::iterator iter = add_target_list_.begin();
-            for (; iter != add_target_list_.end(); iter++)
+            if (!cache_list_[i].no_empty)
             {
-                cache_list_[i].origin_id        = iter->origin_id;
-                cache_list_[i].rectangle.up_x   = iter->rectangle.up_x;
-                cache_list_[i].rectangle.up_y   = iter->rectangle.up_y;
-                cache_list_[i].rectangle.down_x = iter->rectangle.down_x;
-                cache_list_[i].rectangle.down_y = iter->rectangle.down_y;
-                cache_list_[i].lose_times = 0;
-                cache_list_[i].no_empty = true;
-                add_target_list_.erase(iter);
-                break;
+                std::list<LockingTarget>::iterator iter = add_target_list_.begin();
+                for (; iter != add_target_list_.end(); iter++)
+                {
+                    cache_list_[i].origin_id        = iter->origin_id;
+                    cache_list_[i].rectangle.up_x   = iter->rectangle.up_x;
+                    cache_list_[i].rectangle.up_y   = iter->rectangle.up_y;
+                    cache_list_[i].rectangle.down_x = iter->rectangle.down_x;
+                    cache_list_[i].rectangle.down_y = iter->rectangle.down_y;
+                    cache_list_[i].lose_times = 0;
+                    cache_list_[i].no_empty = true;
+                    add_target_list_.erase(iter);
+                    break;
+                }
             }
         }
     }
+    checkClean();
 }
 
 int LockingID::errorRange(int x_site, int y_site, int judge_x_site, int judge_y_site, int allowable_error)
@@ -311,7 +307,8 @@ float LockingID::errorArea(Rectangle rectangle, Rectangle judge_rectangle)
 
 void LockingID::cleanCache(int site)
 {
-    printf("clear: %d\n", site);
+    // printf("clear: %d\n", site);
+    cache_list_[site].origin_id = CLEANER_ID;
     cache_list_[site].rectangle.up_x = 0;
     cache_list_[site].rectangle.up_y = 0;
     cache_list_[site].rectangle.down_x = 0;
@@ -322,24 +319,54 @@ void LockingID::cleanCache(int site)
 
 int LockingID::getID(int origin_id)
 {
-    printf("###################\n");
+    // for (int i = 0; i < CACHE_SIZE; i++)
+    // {
+    //     if (cache_list_[i].no_empty)
+    //     {
+    //         if (origin_id == cache_list_[i].origin_id)
+    //         {
+    //             return i;
+    //         }
+    //     }
+    // }
+    // return NO_MATCH_ID;
+}
+
+int LockingID::getResult(int id, int& up_x, int& up_y, int& down_x, int& down_y)
+{
+    // printf("###################\n");
+    // for (int i = 0; i < CACHE_SIZE; i++)
+    // {
+    //     if (cache_list_[i].no_empty)
+    //     {
+    //         printf("origin_id: %d  lost_times: %d\n", cache_list_[i].origin_id, cache_list_[i].lose_times);
+    //     }
+    // }
+    // printf("*******************\n");
+    if (cache_list_[id].origin_id == CLEANER_ID)
+        return CLEANER_ID;
+
+    if (!cache_list_[id].no_empty)
+        return NO_MATCH_ID;
+
+    up_x = cache_list_[id].rectangle.up_x;
+    up_y = cache_list_[id].rectangle.up_y;
+    down_x = cache_list_[id].rectangle.down_x;
+    down_y = cache_list_[id].rectangle.down_y;
+
+    return MATCH_ID;
+}
+
+void LockingID::checkClean()
+{
     for (int i = 0; i < CACHE_SIZE; i++)
     {
-        if (cache_list_[i].no_empty)
+        if (cache_list_[i].origin_id == INIT_ID)
         {
-            printf("origin_id: %d  lost_times: %d\n", cache_list_[i].origin_id, cache_list_[i].lose_times);
+            cache_list_[i].lose_times++;
+
+            if (cache_list_[i].lose_times > MAX_LOSE_TIMES)
+                cleanCache(i);
         }
     }
-    printf("*******************\n");
-    for (int i = 0; i < CACHE_SIZE; i++)
-    {
-        if (cache_list_[i].no_empty)
-        {
-            if (origin_id == cache_list_[i].origin_id)
-            {
-                return i;
-            }
-        }
-    }
-    return -2;
 }

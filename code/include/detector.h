@@ -40,7 +40,7 @@ private:
     
     vector<vector<float> > detections_;
 
-    JudgeState judge[CACHE_SIZE];
+    JudgeState judge_[CACHE_SIZE];
     void convertImg(Mat img);
     void WrapInputLayer(std::vector<cv::Mat>* input_channels);
     void Preprocess(const cv::Mat& img, std::vector<cv::Mat>* input_channels);

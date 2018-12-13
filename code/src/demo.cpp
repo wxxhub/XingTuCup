@@ -31,7 +31,7 @@ int main()
   // VideoCapture cap("/home/wxx/develop/demo3/video/test2.mp4");
   // VideoCapture cap("/home/wxx/develop/demo3/video/walking/test12.mp4");
   // VideoCapture cap("/home/wxx/develop/demo3/video/many_people/test20.mp4");
-  VideoCapture cap("/home/wxx/develop/demo4/video/walk2/test39.mp4");
+  VideoCapture cap("/home/wxx/develop/demo4/video/walk2/test35.mp4");
   Mat img;
 
   if(!cap.isOpened())

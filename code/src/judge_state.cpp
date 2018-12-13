@@ -50,17 +50,22 @@ int JudgeState::getFilttingResult(std::list<int> judge_site_list)
     return b;
 }
 
-int JudgeState::getJudgeResult(int up_x, int up_y, int down_x, int down_y, int img_h)
+int JudgeState::getJudgeResult(int up_x, int up_y, int down_x, int down_y, int img_h, bool show_result)
 {
     if (judge_times_ < judge_size_)
     {
-        for (int i = judge_times_; judge_times_ < judge_size_; judge_times_++)
-        {
-            up_site_list_.push_back(up_y);
-            down_site_list_.push_back(down_y);
-            vertical_site_list_.push_back(down_y - up_y);
-            horizontal_distance_list_.push_back(down_x - up_x);
-        }   
+        // for (int i = judge_times_; judge_times_ < judge_size_; judge_times_++)
+        // {
+        //     up_site_list_.push_back(up_y);
+        //     down_site_list_.push_back(down_y);
+        //     vertical_site_list_.push_back(down_y - up_y);
+        //     horizontal_distance_list_.push_back(down_x - up_x);
+        // } 
+        up_site_list_.push_back(up_y);
+        down_site_list_.push_back(down_y);
+        vertical_site_list_.push_back(down_y - up_y);
+        horizontal_distance_list_.push_back(down_x - up_x);
+        judge_times_++;
         return NORMAL;
     }
     else
@@ -80,16 +85,21 @@ int JudgeState::getJudgeResult(int up_x, int up_y, int down_x, int down_y, int i
     double down_b = getFilttingResult(down_site_list_);
     double vertical_b = getFilttingResult(vertical_site_list_);
     double horizontal_b = getFilttingResult(horizontal_distance_list_);
-    // printf("b: %f\n", up_b);
-    // printf("vertical_b: %f\n", vertical_b);
-    // printf("horizontal_b: %f\n", horizontal_b);
+    if (show_result)
+   {
+        printf("b: %f\n", up_b);
+        printf("vertical_b: %f\n", vertical_b);
+        printf("horizontal_b: %f\n", horizontal_b);
+   }
     int judge_result;
     if (up_b >= FALLDOWN_B &&  vertical_b <= FALLDOWN_B)
     {
         // edge error judge
-        // if(1.0 * down_y / img_h > EDGE_ERROR)
-        //     if(horizontal_b < HORIZONTAL_B)
-        //         return state_;
+        /*
+        if(1.0 * down_y / img_h > EDGE_ERROR)
+            if(horizontal_b < HORIZONTAL_B)
+                return state_;
+        */
         
         judge_result = FALLDOWN;
     }
@@ -107,4 +117,14 @@ int JudgeState::getJudgeResult(int up_x, int up_y, int down_x, int down_y, int i
 float JudgeState::judgeShape(int up_x, int up_y, int down_x, int down_y)
 {
     return (down_y - up_y) / (down_x - up_x);
+}
+
+void JudgeState::cleanJudgeList()
+{
+    judge_times_ = 0;
+    up_site_list_.clear();
+    down_site_list_.clear();
+    vertical_site_list_.clear();
+    horizontal_distance_list_.clear();
+    state_ = NORMAL;
 }

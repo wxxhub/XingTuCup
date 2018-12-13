@@ -8,8 +8,17 @@
 
 #define CACHE_SIZE 5
 #define MAX_LOSE_TIMES 20
+
+// AREA_ERROR
+#define FILTER_AREA_ERROR 0.4  //   避免出现突然变小的面积带走ID
 #define MIN_AREA_ERROR  0.2
 #define MUST_AREA_ERROR 0.6
+
+// cache_list_ abnormal origion_id
+#define MATCH_ID 0
+#define INIT_ID -1
+#define CLEANER_ID -2
+#define NO_MATCH_ID -10
 
 #define OUT_RANGE   0
 #define UP_RIGHT    1
@@ -45,6 +54,7 @@ public:
     bool ifCoincide(Rectangle rectangle, Rectangle judge_rectangle);
     float errorArea(Rectangle rectangle, Rectangle judge_rectangle);
     int getID(int origin_id);
+    int getResult(int id, int& up_x, int& up_y, int& down_x, int& down_y);
 
 
 private:
@@ -54,6 +64,7 @@ private:
     
     void init();
     void cleanCache(int site);
+    void checkClean();
 };
 
 #endif /* _LOCKING_ID_ */
